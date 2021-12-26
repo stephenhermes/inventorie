@@ -7,20 +7,10 @@ from bs4 import BeautifulSoup   # type: ignore
 from bs4.element import Tag     # type: ignore
 import pandas as pd             # type: ignore
 
-EMAIL_SUPPLIERS = ['Tayda Electronics']
+from .reader import InventoryReader
 
 
-def detect_supplier_from_email(email_file):
-    with open(email_file, 'r') as f:
-        message = email.message_from_file(f)
-    payload = message.get_payload(decode=True)
-    for supplier in EMAIL_SUPPLIERS:
-        if supplier in payload:
-            return supplier
-    return None
-
-
-class TaydaInventoryReader:
+class TaydaInventoryReader(InventoryReader):
     
     def read(self, file: Union[Path, str]) -> pd.DataFrame:
         body = self.read_email_body(file)

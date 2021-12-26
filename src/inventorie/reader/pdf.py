@@ -3,24 +3,14 @@ import re
 from typing import Union, Optional
 
 import pandas as pd                                 # type: ignore
-from pdfreader import SimplePDFViewer, PDFDocument  # type: ignore
+from pdfreader import SimplePDFViewer               # type: ignore
 from pdfreader.types.objects import Annot           # type: ignore
 import tabula                                       # type: ignore
 
-PDF_SUPPLIERS = ['Jameco Electronics']
+from .reader import InventoryReader
 
 
-def detect_supplier_from_pdf(pdf_file):
-    with open(pdf_file,'rb') as f:
-        viewer = SimplePDFViewer(f)
-        for canvas in viewer:
-            for supplier in PDF_SUPPLIERS:
-                if supplier in canvas.strings:
-                    return supplier
-    return None
-
-
-class JamecoInventoryReader:
+class JamecoInventoryReader(InventoryReader):
 
     def read(self, file: Union[Path, str]) -> pd.DataFrame:
         df = self.read_pdf_table(file)

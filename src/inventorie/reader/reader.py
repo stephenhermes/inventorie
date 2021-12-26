@@ -1,7 +1,7 @@
 from pathlib import Path
-from typing import Union, Protocol 
+from typing import Union, Protocol
 
-from pandas import pd   # type: ignore
+import pandas as pd   # type: ignore
 
 
 class InventoryReader(Protocol):
