@@ -44,20 +44,6 @@ class DatasheetLookup(Protocol):
             raise ValueError(f"No datasheet available at {url}.")
 
 
-class TaydaDatasheetLookup(DatasheetLookup):
-
-    supplier = "Tayda Electronics"
-
-    # TODO: This has changed. Should be scraped from product webpage
-    DATASHEET_URL = "https://www.taydaelectronics.com/datasheets/{}.pdf"
-
-    def lookup(self, product_id: str, validate: bool = False) -> str:
-        datasheet_url = self.DATASHEET_URL.format(product_id)
-        if validate:
-            self._validate(datasheet_url)
-        return datasheet_url
-
-
 class JamecoDatasheetLookup(DatasheetLookup):
 
     supplier = "Jameco Electronics"

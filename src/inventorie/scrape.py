@@ -14,6 +14,7 @@ class ScrapeResult:
     manufacturer_product_id: Optional[str] = None
     product_category: Optional[str] = None
     supplier: Optional[str] = None
+    datasheet_url: Optional[str] = None
 
 
 class Scraper(Protocol):
@@ -44,11 +45,10 @@ class TaydaScraper(Scraper):
         if specs is None:
             raise ValueError(f"Unable to find additional information from {url}")
         result = self._scrape_specs_table(specs)
-        try:
-            category_url = self._find_product_category_url(soup)
-            result.product_category = self._scrape_product_category(category_url)
-        except ValueError:
-            pass
+        category_url = self._find_product_category_url(soup)
+        result.product_category = self._scrape_product_category(category_url)
+        result.datasheet_url = self._scrape_datasheet(soup)
+
         return result
 
     def _find_specs_table(self, soup: BeautifulSoup) -> Optional[Tag]:
@@ -87,6 +87,16 @@ class TaydaScraper(Scraper):
         soup = BeautifulSoup(resp.content, features="html.parser")
         title = soup.find("span", {"data-ui-id": "page-title-wrapper"})
         return title.text.strip()
+
+    def _scrape_datasheet(self, soup: BeautifulSoup) -> Optional[str]:
+        info = soup.find("div", {"class": "product attribute description"})
+        links = info.find_all("a")
+        for l in links:
+            if l.attrs.get("href"):
+                link = l.attrs.get("href")
+                if "www.taydaelectronics.com/datasheets/" in link:
+                    return link
+        return None
 
 
 class JamecoScraper(Scraper):

@@ -8,7 +8,7 @@ from pdfreader import SimplePDFViewer  # type: ignore
 
 from invoice import InventoryReader, JamecoInventoryReader, TaydaInventoryReader
 from pipeline import Pipeline
-from datasheet import TaydaDatasheetLookup, JamecoDatasheetLookup
+from datasheet import JamecoDatasheetLookup
 from product import TaydaProductLookup
 from scrape import TaydaScraper, JamecoScraper
 
@@ -33,7 +33,6 @@ PIPELINES = {
     SUPPLIER.TAYDA: Pipeline(
         TaydaInventoryReader(),
         TaydaProductLookup(),
-        TaydaDatasheetLookup(),
         TaydaScraper(),
     ),
     SUPPLIER.JAMECO: Pipeline(
