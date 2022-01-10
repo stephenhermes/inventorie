@@ -15,6 +15,7 @@ class ScrapeResult:
     product_category: Optional[str] = None
     supplier: Optional[str] = None
     datasheet_url: Optional[str] = None
+    description: Optional[str] = None
 
 
 class Scraper(Protocol):
@@ -48,7 +49,6 @@ class TaydaScraper(Scraper):
         category_url = self._find_product_category_url(soup)
         result.product_category = self._scrape_product_category(category_url)
         result.datasheet_url = self._scrape_datasheet(soup)
-
         return result
 
     def _find_specs_table(self, soup: BeautifulSoup) -> Optional[Tag]:
@@ -107,10 +107,10 @@ class JamecoScraper(Scraper):
         soup = BeautifulSoup(resp.content, features="html.parser")
         result = self._scrape_specs_table(soup)
         result.product_category = self._scrape_product_category(soup)
+        result.description = self._scrape_product_description(soup)
         return result
 
     def _scrape_specs_table(self, soup: BeautifulSoup) -> ScrapeResult:
-
         result = ScrapeResult(supplier="Jameco Electronics")
         items = soup.find_all("li")
         for item in items:
@@ -120,10 +120,13 @@ class JamecoScraper(Scraper):
                 result.manufacturer_product_id = item.span.text.strip()
         return result
 
-    def _scrape_product_category(self, soup) -> str:
-
+    def _scrape_product_category(self, soup: BeautifulSoup) -> str:
         breadcrumb = soup.find("ol", {"class": "breadcrumb"})
         categories = breadcrumb.find_all("li")
         # Home, Category, Subcategory, Specific
         _, parent, *_ = [c.text.strip() for c in categories]
         return parent
+
+    def _scrape_product_description(self, soup: BeautifulSoup) -> str:
+        header = soup.find("h1")
+        return header.text.strip()

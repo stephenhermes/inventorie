@@ -20,10 +20,13 @@ class JamecoInventoryReader(InventoryReader):
             raise ValueError(f"Unable to read table from {file}")
         links = self._read_product_links(file)
         df["product_url"] = df["product_id"].map(links)
+        # Tabula can't get complete product descriptions since they
+        # are multi-line. Getting description from scraping instead
+        df["description"] = None
         return df
 
     def _read_pdf_table(self, pdf_file: Union[Path, str]) -> Optional[pd.DataFrame]:
-        # TODO: Tabula misses portions of descriptions on new lines...
+
         dfs = tabula.read_pdf(pdf_file, pages="all")
         for df in dfs:
             if "Description" in df:

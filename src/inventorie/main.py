@@ -24,8 +24,6 @@ def get_args() -> ArgumentParser:
 
 def main(workdir: Path, output: Optional[Path]):
 
-    # workdir = Path(__file__).resolve().parents[2] / "example"
-
     print(f"Working in {workdir.resolve()}")
     dfs = []
     for file in workdir.glob("*"):
