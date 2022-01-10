@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 import json
 from typing import Protocol, Optional
@@ -27,12 +28,20 @@ class Scraper(Protocol):
         for new_col in ScrapeResult.__dataclass_fields__.keys():
             if new_col not in df.columns:
                 df[new_col] = None
-        for idx, row in df.iterrows():
-            result = self.scrape(row["product_url"])
+
+        with ThreadPoolExecutor() as executor:
+            futures = {
+                idx: executor.submit(self.scrape, row["product_url"])
+                for idx, row in df.iterrows()
+            }
+            scrape_results = {idx: t.result() for idx, t in futures.items()}
+
+        for idx, result in scrape_results.items():
             for col, val in result.__dict__.items():
-                if row[col] is not None:
+                if df.at[idx, col] is not None:
                     continue
                 df.at[idx, col] = val
+
         return df
 
 

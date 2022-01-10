@@ -1,10 +1,12 @@
 from argparse import ArgumentParser
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Union, Optional
+from typing import Dict, Optional
 
 import pandas as pd  # type: ignore
 
 from supplier import get_pipeline_from_file
+from pipeline import Pipeline
 
 
 def get_args() -> ArgumentParser:
@@ -22,19 +24,33 @@ def get_args() -> ArgumentParser:
     return parser
 
 
-def main(workdir: Path, output: Optional[Path]):
-
-    print(f"Working in {workdir.resolve()}")
-    dfs = []
+def get_file_pipelines(workdir: Path) -> Dict[Path, Pipeline]:
+    pipelines = {}
     for file in workdir.glob("*"):
         if file.suffix not in (".pdf", ".eml"):
             continue
-        print(f"Processing {file.name}")
-        pipeline = get_pipeline_from_file(file)
-        df = pipeline.process(file)
-        dfs.append(df)
+        try:
+            pipelines[file] = get_pipeline_from_file(file)
+        except ValueError:
+            print(f"No parser found for {file.name}")
+            continue
+    return pipelines
 
-    df = pd.concat(dfs)
+
+def main(workdir: Path, output: Optional[Path]):
+    def _process_file(pipeline: Pipeline, file: Path) -> pd.DataFrame:
+        print(f"Processing {file.name}")
+        return pipeline.process(file)
+
+    print(f"Working in {workdir.resolve()}")
+
+    pipelines = get_file_pipelines(workdir)
+    with ThreadPoolExecutor() as executor:
+        futures = [
+            executor.submit(_process_file, pipeline, file)
+            for file, pipeline in pipelines.items()
+        ]
+        df = pd.concat([future.result() for future in futures])
     df.reset_index(inplace=True, drop=True)
     print("Done")
 

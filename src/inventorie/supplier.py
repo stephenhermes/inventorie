@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import email
 from enum import Enum
 from pathlib import Path
-from typing import Union, Optional
+from typing import Union, Optional, Dict, List, Tuple
 
 from pdfreader import SimplePDFViewer  # type: ignore
 
@@ -13,29 +13,28 @@ from product import TaydaProductLookup
 from scrape import TaydaScraper, JamecoScraper
 
 
-@dataclass
-class Supplier:
-    name: str
-    file_type: str
-
-
 class SUPPLIER(Enum):
-    JAMECO = Supplier("Jameco Electronics", ".pdf")
-    TAYDA = Supplier("Tayda Electronics", ".eml")
+    JAMECO = "Jameco Electronics"
+    TAYDA = "Tayda Electronics"
 
 
-READERS = {
-    SUPPLIER.TAYDA: TaydaInventoryReader(),
-    SUPPLIER.JAMECO: JamecoInventoryReader(),
+SUPPLIER_FILE_TYPES: Dict[SUPPLIER, List[str]] = {
+    SUPPLIER.TAYDA: [".eml"],
+    SUPPLIER.JAMECO: [".pdf"],
 }
 
-PIPELINES = {
-    SUPPLIER.TAYDA: Pipeline(
+READERS: Dict[Tuple[SUPPLIER, str], InventoryReader] = {
+    (SUPPLIER.TAYDA, ".eml"): TaydaInventoryReader(),
+    (SUPPLIER.JAMECO, ".pdf"): JamecoInventoryReader(),
+}
+
+PIPELINES: Dict[Tuple[SUPPLIER, str], Pipeline] = {
+    (SUPPLIER.TAYDA, ".eml"): Pipeline(
         TaydaInventoryReader(),
         TaydaProductLookup(),
         TaydaScraper(),
     ),
-    SUPPLIER.JAMECO: Pipeline(
+    (SUPPLIER.JAMECO, ".pdf"): Pipeline(
         JamecoInventoryReader(), JamecoDatasheetLookup(), JamecoScraper()
     ),
 }
@@ -45,10 +44,10 @@ def detect_supplier_from_pdf(pdf_file: Union[str, Path]) -> Optional[SUPPLIER]:
     with open(pdf_file, "rb") as f:
         viewer = SimplePDFViewer(f)
         for canvas in viewer:
-            for supplier in SUPPLIER:
-                if supplier.value.file_type != ".pdf":
+            for supplier, file_types in SUPPLIER_FILE_TYPES.items():
+                if ".pdf" not in file_types:
                     continue
-                if supplier.value.name in canvas.strings:
+                if supplier.value in canvas.strings:
                     return supplier
     return None
 
@@ -57,36 +56,32 @@ def detect_supplier_from_email(email_file: Union[str, Path]) -> Optional[SUPPLIE
     with open(email_file, "r") as f:
         message = email.message_from_file(f)
     payload = message.get_payload(decode=True).decode("utf-8")
-    for supplier in SUPPLIER:
-        if supplier.value.file_type != ".eml":
+    for supplier, file_types in SUPPLIER_FILE_TYPES.items():
+        if ".eml" not in file_types:
             continue
-        if supplier.value.name in payload:
+        if supplier.value in payload:
             return supplier
     return None
 
 
-def detect_supplier_from_file(file: Union[str, Path]) -> Optional[SUPPLIER]:
+def detect_supplier_from_file(file: Path) -> Optional[SUPPLIER]:
     PARSERS = {".pdf": detect_supplier_from_pdf, ".eml": detect_supplier_from_email}
-    if not hasattr(file, "suffix"):
-        file = Path(file)
     file_type = file.suffix
-    if file_type not in [s.value.file_type for s in SUPPLIER]:
+    if file_type not in set(ft for v in SUPPLIER_FILE_TYPES.values() for ft in v):
         raise ValueError(f"Cannot parse from file of type {file_type}")
     parser = PARSERS[file_type]
     return parser(file)
 
 
-def get_reader_from_file(file: Union[str, Path]) -> InventoryReader:
+def get_reader_from_file(file: Path) -> InventoryReader:
     supplier = detect_supplier_from_file(file)
     if supplier is None:
         raise ValueError(f"Unable to detect supplier from {file}.")
+    return READERS[(supplier, file.suffix)]
 
-    return READERS[supplier]
 
-
-def get_pipeline_from_file(file: Union[str, Path]) -> Pipeline:
+def get_pipeline_from_file(file: Path) -> Pipeline:
     supplier = detect_supplier_from_file(file)
     if supplier is None:
         raise ValueError(f"Unable to detect supplier from {file}.")
-
-    return PIPELINES[supplier]
+    return PIPELINES[(supplier, file.suffix)]
