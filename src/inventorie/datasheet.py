@@ -23,7 +23,7 @@ class DatasheetLookup(Protocol):
 
         Returns
         -------
-        url : str
+        url : string
             A url to the product datasheet.
         """
         ...

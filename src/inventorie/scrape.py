@@ -20,11 +20,39 @@ class ScrapeResult:
 
 
 class Scraper(Protocol):
+    """Represents a supplier-specific web scraper."""
+
     def scrape(self, url: str) -> ScrapeResult:
+        """Scrapes product information from provided url.
+
+        Parameters
+        ----------
+        url : string
+            The url for the particular product.
+
+        Returns
+        -------
+        result : ScrapeResult
+            The scraped data.
+
+        """
         ...
 
     def update_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Updates a data frame of products to include scraped data for each product.
 
+        Parameters
+        ----------
+        df : DataFrame
+            A dataframe with a 'product_url' column.
+
+        Returns
+        -------
+        df : DataFrame
+            The original dataframe with missing fields (and columns) updated
+            by scraped results for each product.
+
+        """
         for new_col in ScrapeResult.__dataclass_fields__.keys():
             if new_col not in df.columns:
                 df[new_col] = None
@@ -46,6 +74,8 @@ class Scraper(Protocol):
 
 
 class TaydaScraper(Scraper):
+    """A `Scraper` for Tayda Electronics."""
+
     def scrape(self, url: str) -> ScrapeResult:
         resp = requests.get(url)
         if resp.status_code != 200:
@@ -61,6 +91,7 @@ class TaydaScraper(Scraper):
         return result
 
     def _find_specs_table(self, soup: BeautifulSoup) -> Optional[Tag]:
+        """Find the product specifications table."""
         tables = soup.find_all("table")
         for table in tables:
             if (
@@ -71,6 +102,7 @@ class TaydaScraper(Scraper):
         return None
 
     def _scrape_specs_table(self, table: Tag) -> ScrapeResult:
+        """Scrape relevant data from product specification."""
         rows = table.find_all("tr")
         result = ScrapeResult(supplier="Tayda Electronics")
         for row in rows:
@@ -103,12 +135,14 @@ class TaydaScraper(Scraper):
         for l in links:
             if l.attrs.get("href"):
                 link = l.attrs.get("href")
-                if "www.taydaelectronics.com/datasheets/" in link:
+                if "taydaelectronics.com/datasheets/" in link:
                     return link
         return None
 
 
 class JamecoScraper(Scraper):
+    """A `Scraper` for Jameco Electronics."""
+
     def scrape(self, url: str) -> ScrapeResult:
         resp = requests.get(url)
         if resp.status_code != 200:

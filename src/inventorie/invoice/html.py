@@ -26,11 +26,13 @@ class TaydaInventoryReader(InventoryReader):
         return df
 
     def _read_email_body(self, email_file: Union[Path, str]) -> bytes:
+        """Get the email text from `.eml` file."""
         with open(email_file, "r") as f:
             message = email.message_from_file(f)
         return message.get_payload(decode=True)
 
     def _get_inventory_table(self, body: bytes) -> Optional[Tag]:
+        """Extract the inventory table from the email text."""
         soup = BeautifulSoup(body, "html.parser")
         tables = soup.find_all("table")
         for table in tables:
@@ -40,6 +42,7 @@ class TaydaInventoryReader(InventoryReader):
             return None
 
     def _parse_inventory_row(self, row: Tag) -> Tuple[str, str, int, float]:
+        """Extract information from single row in inventory table."""
         item, quantity, price = row.find_all("td")
         quantity = int(quantity.text.strip())
         price = price.text.strip().replace("$", "")
@@ -52,6 +55,7 @@ class TaydaInventoryReader(InventoryReader):
         return sku, description, quantity, price
 
     def _parse_inventory_table(self, table: Tag) -> pd.DataFrame:
+        """Extract relevant information from inventory table."""
         rows = []
         for tb in table.find_all("tbody"):
             rows += tb.find_all("tr")

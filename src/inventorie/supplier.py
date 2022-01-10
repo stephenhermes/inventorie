@@ -41,6 +41,18 @@ PIPELINES: Dict[Tuple[SUPPLIER, str], Pipeline] = {
 
 
 def detect_supplier_from_pdf(pdf_file: Union[str, Path]) -> Optional[SUPPLIER]:
+    """Automatically get the product supplier from a pdf.
+
+    Parameters
+    ----------
+    file : Path
+        The file for the invoice.
+
+    Returns
+    -------
+    supplier : SUPPLIER
+
+    """
     with open(pdf_file, "rb") as f:
         viewer = SimplePDFViewer(f)
         for canvas in viewer:
@@ -53,6 +65,20 @@ def detect_supplier_from_pdf(pdf_file: Union[str, Path]) -> Optional[SUPPLIER]:
 
 
 def detect_supplier_from_email(email_file: Union[str, Path]) -> Optional[SUPPLIER]:
+    """Automatically get the product supplier from an email.
+
+    The email is assumed to be in `.eml` format.
+
+    Parameters
+    ----------
+    file : Path
+        The file for the invoice.
+
+    Returns
+    -------
+    supplier : SUPPLIER
+
+    """
     with open(email_file, "r") as f:
         message = email.message_from_file(f)
     payload = message.get_payload(decode=True).decode("utf-8")
@@ -65,6 +91,18 @@ def detect_supplier_from_email(email_file: Union[str, Path]) -> Optional[SUPPLIE
 
 
 def detect_supplier_from_file(file: Path) -> Optional[SUPPLIER]:
+    """Automatically get the product supplier from an invoice.
+
+    Parameters
+    ----------
+    file : Path
+        The file for the invoice.
+
+    Returns
+    -------
+    supplier : SUPPLIER
+
+    """
     PARSERS = {".pdf": detect_supplier_from_pdf, ".eml": detect_supplier_from_email}
     file_type = file.suffix
     if file_type not in set(ft for v in SUPPLIER_FILE_TYPES.values() for ft in v):
@@ -74,6 +112,19 @@ def detect_supplier_from_file(file: Path) -> Optional[SUPPLIER]:
 
 
 def get_reader_from_file(file: Path) -> InventoryReader:
+    """Automatically get the reader for a file type.
+
+    Parameters
+    ----------
+    file : Path
+        The invoice to get the data reader for.
+
+    Returns
+    -------
+    reader : Reader
+        The reader for reading raw data from the invoice.
+
+    """
     supplier = detect_supplier_from_file(file)
     if supplier is None:
         raise ValueError(f"Unable to detect supplier from {file}.")
@@ -81,6 +132,19 @@ def get_reader_from_file(file: Path) -> InventoryReader:
 
 
 def get_pipeline_from_file(file: Path) -> Pipeline:
+    """Automatically get the processing pipeline for a file.
+
+    Parameters
+    ----------
+    file : Path
+        The invoice to get the processing pipeline for.
+
+    Returns
+    -------
+    pipeline : Pipeline
+        The pipeline for parsing the invoice.
+
+    """
     supplier = detect_supplier_from_file(file)
     if supplier is None:
         raise ValueError(f"Unable to detect supplier from {file}.")

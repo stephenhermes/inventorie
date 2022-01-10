@@ -36,7 +36,7 @@ class ProductLookup(Protocol):
 
         Returns
         -------
-        updated_df : DataFrame
+        df : DataFrame
             Dataframe with column for 'product_url'.
 
         """

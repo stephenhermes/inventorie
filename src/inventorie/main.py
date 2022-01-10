@@ -9,6 +9,22 @@ from supplier import get_pipeline_from_file
 from pipeline import Pipeline
 
 
+COLUMNS = [
+    "manufacturer_product_id",
+    "manufacturer",
+    "product_id",
+    "supplier",
+    "product_category",
+    "description",
+    "product_url",
+    "datasheet_url",
+    "quantity",
+    "unit",
+    "unit_price",
+    "amount",
+]
+
+
 def get_args() -> ArgumentParser:
     parser = ArgumentParser()
     parser.add_argument(
@@ -53,6 +69,8 @@ def main(workdir: Path, output: Optional[Path]):
         df = pd.concat([future.result() for future in futures])
     df.reset_index(inplace=True, drop=True)
     print("Done")
+
+    df = df[COLUMNS]
 
     if output:
         df.to_csv(output, index=False)

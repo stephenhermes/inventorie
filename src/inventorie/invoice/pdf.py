@@ -15,6 +15,7 @@ class JamecoInventoryReader(InventoryReader):
     supplier = "Jameco Electronics"
 
     def read(self, file: Union[Path, str]) -> pd.DataFrame:
+
         df = self._read_pdf_table(file)
         if df is None:
             raise ValueError(f"Unable to read table from {file}")
@@ -26,6 +27,7 @@ class JamecoInventoryReader(InventoryReader):
         return df
 
     def _read_pdf_table(self, pdf_file: Union[Path, str]) -> Optional[pd.DataFrame]:
+        """Extract the invoice table from the pdf."""
 
         dfs = tabula.read_pdf(pdf_file, pages="all")
         for df in dfs:
@@ -47,16 +49,19 @@ class JamecoInventoryReader(InventoryReader):
             return None
 
     def _parse_link_annotation(self, annot: Annot) -> str:
+        """Extract url from pdf annotation."""
         link = annot["A"]["URI"].decode("utf-8")
         return link
 
     def _extract_product_id(self, link):
+        """Extract the product id from the product url."""
         match = re.match(".*\&productId=(\d+)", link)
         if match:
             return match.groups()[0]
         return None
 
     def _read_product_links(self, pdf_file: Union[Path, str]) -> dict:
+        """Get the product urls for all products in the pdf."""
 
         with open(pdf_file, "rb") as f:
             viewer = SimplePDFViewer(f)
