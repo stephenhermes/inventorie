@@ -6,11 +6,11 @@ from typing import Union, Optional, Dict, List, Tuple
 
 from pdfreader import SimplePDFViewer  # type: ignore
 
-from invoice import InventoryReader, JamecoInventoryReader, TaydaInventoryReader
-from pipeline import Pipeline
-from datasheet import JamecoDatasheetLookup
-from product import TaydaProductLookup
-from scrape import TaydaScraper, JamecoScraper
+from .invoice import InventoryReader, JamecoInventoryReader, TaydaInventoryReader
+from .pipeline import Pipeline
+from .datasheet import JamecoDatasheetLookup
+from .product import TaydaProductLookup
+from .scrape import TaydaScraper, JamecoScraper
 
 
 class SUPPLIER(Enum):

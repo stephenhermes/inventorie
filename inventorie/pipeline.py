@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd  # type: ignore
 
-from invoice.reader import InventoryReader
+from .invoice.reader import InventoryReader
 
 
 class Chainable(Protocol):

@@ -5,8 +5,8 @@ from typing import Dict, Optional
 
 import pandas as pd  # type: ignore
 
-from supplier import get_pipeline_from_file
-from pipeline import Pipeline
+from .supplier import get_pipeline_from_file
+from .pipeline import Pipeline
 
 
 COLUMNS = [
@@ -87,7 +87,11 @@ def main(workdir: Path, output: Optional[Path]):
     print(df)
 
 
-if __name__ == "__main__":
+def run_script():
     args = get_args()
     flags = args.parse_args()
     main(flags.workdir, flags.output)
+
+
+if __name__ == "__main__":
+    run_script()

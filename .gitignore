@@ -1,6 +1,6 @@
 .DS_Store
-venv/
 __pycache__/
+*.egg-info/
 
 # Used by pytest
 .cache
