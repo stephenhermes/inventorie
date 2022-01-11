@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages  # type: ignore
 
 import inventorie
 
@@ -23,7 +23,5 @@ setup(
     python_requires=">=3.7",
     install_requires=REQUIREMENTS,
     packages=find_packages(),
-    entry_points={
-        "console_scripts": ["inventorie=inventorie.main:run_script"]
-    }
+    entry_points={"console_scripts": ["inventorie=inventorie.main:run_script"]},
 )
