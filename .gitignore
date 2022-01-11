@@ -1,8 +1,10 @@
 .DS_Store
-
 venv/
 __pycache__/
-example/
-notes/
 
+# Used by pytest
+.cache
+.pytest_cache/
+
+# Used by mypy
 .mypy_cache
